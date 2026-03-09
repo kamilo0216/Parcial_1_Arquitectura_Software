@@ -67,16 +67,7 @@ DARK_GRAY = Constants.DARK_GRAY
 # ─────────────────────────────────────────────
 
 def draw_mario(surface, x, y, facing_right=True, hat_color=RED, clothes_color=RED, pants_color=BLUE):
-    """
-    Dibuja un sprite pixel art de un personaje estilo Mario (32x48 píxeles).
-    Parámetros:
-    - surface: Superficie de Pygame donde dibujar (e.g., pantalla).
-    - x, y: Posición superior izquierda del sprite.
-    - facing_right: Booleano para dirección (True: derecha, False: izquierda).
-    - hat_color, clothes_color, pants_color: Colores personalizables para sombrero, ropa y pantalones.
-    Funcionalidad: Usa pygame.draw.rect para crear formas rectangulares que simulan pixel art.
-    Variables locales: ox, oy = coordenadas enteras para precisión.
-    """
+
     ox, oy = int(x), int(y)  # Convertir a enteros para evitar errores de dibujo
 
     # Dibujar sombrero: ala inferior, copa superior, borde negro
@@ -111,15 +102,7 @@ def draw_mario(surface, x, y, facing_right=True, hat_color=RED, clothes_color=RE
 
 
 def draw_brick(surface, rect, broken=False):
-    """
-    Dibuja un ladrillo con textura simple si no está roto.
-    Parámetros:
-    - surface: Superficie donde dibujar.
-    - rect: Tupla (x, y, w, h) para posición y tamaño.
-    - broken: Booleano; si True, no dibuja nada (ladrillo destruido).
-    Funcionalidad: Dibuja rectángulo principal, borde, y líneas para simular mortero.
-    Variables: x, y, w, h desempaquetadas de rect.
-    """
+  
     if broken:
         return  # No dibujar si el ladrillo está roto
     x, y, w, h = rect  # Desempaquetar coordenadas
@@ -352,23 +335,13 @@ class Player(pygame.sprite.Sprite):
 
     # ── Física ──────────────────────────────
     def apply_gravity(self):
-        """
-        Aplica gravedad a la velocidad vertical.
-        Incrementa vel_y con GRAVITY, limita a 16 para evitar caídas infinitas.
-        """
+      
         self.vel_y += GRAVITY  # Aplicar aceleración gravitacional
         if self.vel_y > 16:  # Límite de velocidad de caída
             self.vel_y = 16
 
     def move(self, keys, platforms):
-        """
-        Procesa input del usuario y actualiza posición con física.
-        Parámetros:
-        - keys: Estado de teclas (de pygame.key.get_pressed()).
-        - platforms: Lista de sprites para colisiones.
-        Funcionalidad: Maneja movimiento horizontal, salto, gravedad, colisiones.
-        Variables: vel_x/vel_y actualizadas; rect movido; límites de pantalla.
-        """
+        
         # Movimiento horizontal: izquierda/derecha o A/D
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.vel_x = -MOVE_SPEED  # Velocidad negativa para izquierda
@@ -404,12 +377,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.top = 0  # Respawn arriba si cae abajo
 
     def _collide_x(self, platforms):
-        """
-        Maneja colisiones horizontales con plataformas.
-        Parámetros: platforms - lista de sprites sólidos.
-        Funcionalidad: Para cada plataforma, si colisión, ajusta rect.x para detener movimiento.
-        Ignora ladrillos rotos.
-        """
+    
         for p in platforms:
             if isinstance(p, Brick) and p.broken:  # Ignorar ladrillos destruidos
                 continue
@@ -420,13 +388,7 @@ class Player(pygame.sprite.Sprite):
                     self.rect.left = p.rect.right  # Ajustar a borde derecho
 
     def _collide_y(self, platforms):
-        """
-        Maneja colisiones verticales con plataformas.
-        Parámetros: platforms - lista de sprites sólidos.
-        Funcionalidad: Detecta colisión, ajusta posición y velocidad.
-        Si cayendo, pone en suelo; si golpeando arriba, rompe ladrillo.
-        Ignora ladrillos rotos.
-        """
+       
         for p in platforms:
             if isinstance(p, Brick) and p.broken:  # Ignorar rotos
                 continue
@@ -455,33 +417,6 @@ class Player(pygame.sprite.Sprite):
 # ─────────────────────────────────────────────
 
 class MarioBrosGame:
-    """
-    Clase principal que implementa el patrón de diseño Game Loop.
-    El Game Loop es el ciclo principal del juego, ejecutado en run():
-    while running:
-        process_input()  # 1. Procesar entrada del usuario
-        update()         # 2. Actualizar estado del juego (lógica, física)
-        render()         # 3. Dibujar en pantalla
-        clock.tick(FPS)  # 4. Controlar velocidad (60 FPS)
-
-    Estados del juego:
-    - SELECT: Pantalla de selección de personaje.
-    - PLAYING: Juego activo, con movimiento y colisiones.
-    - PAUSED: Juego pausado, esperando input para reanudar.
-    - GAMEOVER: Fin del juego, victoria al alcanzar bandera.
-
-    Atributos principales:
-    - screen: Superficie de Pygame para dibujar.
-    - clock: Controla FPS.
-    - state: Estado actual del juego.
-    - player: Instancia del personaje jugable.
-    - all_sprites: Grupo de todos los sprites para dibujado eficiente.
-    - platforms, bricks, coins, pipes: Grupos específicos de objetos.
-    - flag: Bandera de victoria.
-    - particles, coin_popups: Efectos visuales.
-
-    Funcionalidad: Inicializa Pygame, maneja loop, transiciones de estado.
-    """
 
     def __init__(self):
         """
@@ -492,7 +427,7 @@ class MarioBrosGame:
         except Exception as e:
             print(f"Error inicializando Pygame: {e}")
             sys.exit(1)
-        pygame.display.set_caption("Mario Bros - Game Loop Pattern")
+        pygame.display.set_caption("Mario Bros - Parcial 1 Arquitectura de Software")
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         self.clock  = pygame.time.Clock()
         self.font_big   = pygame.font.SysFont("Arial", 36, bold=True)
@@ -518,16 +453,7 @@ class MarioBrosGame:
     # ══════════════════════════════════════════
 
     def run(self):
-        """
-        EJECUCIÓN DEL GAME LOOP PRINCIPAL:
-        Ciclo continuo mientras running=True.
-        Fases del Game Loop:
-        1. process_input(): Maneja eventos y teclas.
-        2. update(): Actualiza lógica del juego.
-        3. render(): Dibuja en pantalla.
-        4. clock.tick(FPS): Limita a 60 FPS.
-        Al salir, cierra Pygame y termina programa.
-        """
+       
         while self.running:  # Bucle principal del Game Loop
             self.process_input()  # Fase 1: Procesar entrada
             self.update()         # Fase 2: Actualizar estado
@@ -791,7 +717,7 @@ class MarioBrosGame:
         info  = self.font_med.render(
             f"{self.player.name} recogió {self.player.score} monedas 🪙",
             True, WHITE)
-        restart = self.font_small.render("R → Volver al menú   |   ESC → Salir", True, GRAY)
+        restart = self.font_small.render("R → Volver al menú   |   ESC → Salir", True, RED)
 
         self.screen.blit(title,   (SCREEN_W//2 - title.get_width()//2,   140))
         self.screen.blit(info,    (SCREEN_W//2 - info.get_width()//2,    290))
@@ -840,11 +766,12 @@ class MarioBrosGame:
             self.all_sprites.add(pipe)
             self.platforms.add(pipe)  # Para colisiones
 
-        # ── Ladrillos ──────────────
+        # ── Ladrillos Posiciones ──────────────
         brick_data = [
-            (250, 320), (300, 320), (350, 320),  # Sobre primera plataforma
-            (450, 270), (500, 270), (550, 270),  # Sobre segunda
-            (650, 220), (700, 220),  # Sobre tercera
+            (45, 330), (120, 120), (30, 120),  # primera plataforma
+            (250, 300), (200, 90), (275, 90),  # segunda platorma
+            (460, 250), (400, 40), (500, 40), # tercera plataforma
+            (600, 60), (700, 60),  # cuarta plataforma
         ]
         for bx, by in brick_data:
             brick = Brick(bx, by)
