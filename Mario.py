@@ -1,3 +1,4 @@
+# importacion de librerias
 import pygame
 import sys
 import random
@@ -5,14 +6,14 @@ import random
 # ─────────────────────────────────────────────
 #  CONSTANTES
 # ─────────────────────────────────────────────
-class Constants:
-    SCREEN_W = 800
-    SCREEN_H = 600
-    FPS = 60
-    GRAVITY = 0.5
-    JUMP_FORCE = -13
-    MOVE_SPEED = 4
-    TILE = 40  # tamaño de cada bloque
+class Constants: #clase para agrupar constantes del juego
+    SCREEN_W = 800 # ancho de la ventana
+    SCREEN_H = 600 # alto de la ventana
+    FPS = 60 # frames por segundo para control de tiempo
+    GRAVITY = 0.5 # Gravedad aplicada al jugador cada frame
+    JUMP_FORCE = -13 # Fuerza de salto
+    MOVE_SPEED = 4 # Velocidad de movimiento
+    TILE = 30  # tamaño de cada bloque
 
     # Colores
     SKY_BLUE = (107, 196, 255)
@@ -66,7 +67,7 @@ DARK_GRAY = Constants.DARK_GRAY
 #  FUNCIONES DE DIBUJO DE SPRITES (pixel art)
 # ─────────────────────────────────────────────
 
-def draw_mario(surface, x, y, facing_right=True, hat_color=RED, clothes_color=RED, pants_color=BLUE):
+def draw_mario(surface, x, y, facing_right=True, hat_color=RED, clothes_color=RED, pants_color=BLUE):# Dibuja un sprite de Mario o Luigi en la posición (x, y) con colores personalizados.
 
     ox, oy = int(x), int(y)  # Convertir a enteros para evitar errores de dibujo
 
@@ -101,8 +102,8 @@ def draw_mario(surface, x, y, facing_right=True, hat_color=RED, clothes_color=RE
     pygame.draw.rect(surface, BLACK,      (ox+18, oy+44, 12, 6))      # Zapato derecho
 
 
-def draw_brick(surface, rect, broken=False):
-  
+def draw_brick(surface, rect, broken=False):# Dibuja un ladrillo en la posición (x, y) con colores personalizados.
+      
     if broken:
         return  # No dibujar si el ladrillo está roto
     x, y, w, h = rect  # Desempaquetar coordenadas
@@ -116,9 +117,8 @@ def draw_brick(surface, rect, broken=False):
     pygame.draw.line(surface, BRICK_DARK, (x+3*w//4, y+h//2), (x+3*w//4, y+h), 2)
 
 
-def draw_coin(surface, cx, cy, r=10, anim=0):
-    """Moneda animada (aplana/ensancha en función del anim 0-1)."""
-    width = max(3, int(r * 2 * (0.4 + 0.6 * abs(anim))))
+def draw_coin(surface, cx, cy, r=10, anim=0):# Moneda animada (aplana/ensancha)
+    width = max(3, int(r * 2 * (0.4 + 0.6 * abs(anim)))) # Efecto de giro de delgada a ancha
     pygame.draw.ellipse(surface, COIN_GOLD, (cx - width//2, cy - r, width, r*2))
     pygame.draw.ellipse(surface, COIN_DARK, (cx - width//2, cy - r, width, r*2), 2)
     if width > 6:
@@ -133,7 +133,7 @@ def draw_ground_tile(surface, rect):
     pygame.draw.rect(surface, (80, 180, 60), (x, y, w, 8))
 
 
-def draw_background(surface):
+def draw_background(surface):# Dibuja el fondo del juego con cielo y nubes decorativas
     surface.fill(SKY_BLUE)
     # nubes decorativas
     for cx, cy in [(100, 80), (300, 50), (550, 90), (700, 60)]:
@@ -146,56 +146,32 @@ def draw_background(surface):
 #  CLASES DEL JUEGO
 # ─────────────────────────────────────────────
 
-class Coin(pygame.sprite.Sprite):
-    """
-    Representa una moneda recolectable en el juego.
-    Hereda de pygame.sprite.Sprite para integración con grupos.
-    Atributos:
-    - rect: Rectángulo de colisión y posición (20x20 px).
-    - anim: Valor de animación (0-1) para efecto de rotación.
-    - anim_dir: Dirección de la animación (+1 o -1).
-    - collected: Booleano; True si recolectada, evita dibujado.
-    Funcionalidad: update() anima la moneda; draw() la dibuja si no recolectada.
-    """
+class Coin(pygame.sprite.Sprite):# monedas recolectables
+    
     def __init__(self, x, y):
         super().__init__()
         self.rect = pygame.Rect(x, y, 20, 20)  # Posición y tamaño de la moneda
         self.anim = 0.0  # Valor inicial de animación
         self.anim_dir = 1  # Dirección de animación (incrementa)
-        self.collected = False  # Estado de recolección
+        self.collected = False  # Indica si la moneda ha sido recolectada
 
-    def update(self):
-        """
-        Actualiza la animación de la moneda.
-        Incrementa anim, invierte dirección en límites para oscilar entre -1 y 1.
-        """
+    def update(self): # Actualiza la animación de la moneda
+        
         self.anim += 0.05 * self.anim_dir  # Avanza animación
         if self.anim >= 1.0:  # Límite superior
             self.anim_dir = -1  # Invertir dirección
         if self.anim <= -1.0:  # Límite inferior
             self.anim_dir = 1  # Invertir dirección
 
-    def draw(self, surface):
-        """
-        Dibuja la moneda si no ha sido recolectada.
-        Llama a draw_coin con centro del rect y animación actual.
-        """
+    def draw(self, surface): # Dibuja la moneda si no ha sido recolectada, con animación de giro
+        
         if not self.collected:
             draw_coin(surface, self.rect.centerx, self.rect.centery,
                       r=10, anim=self.anim)
 
 
-class Brick(pygame.sprite.Sprite):
-    """
-    Representa un ladrillo destructible en el juego.
-    Se rompe al ser golpeado desde abajo, con animación de sacudida.
-    Atributos:
-    - rect: Posición y tamaño (usando TILE por defecto).
-    - broken: Booleano; True si destruido.
-    - shake: Contador de frames para animación de ruptura (0-8).
-    - oy: Posición Y original para animación.
-    Funcionalidad: hit() inicia ruptura; update() maneja animación; draw() dibuja si no roto.
-    """
+class Brick(pygame.sprite.Sprite):# Dibuja ladrillos que pueden ser rotos
+   
     def __init__(self, x, y, w=TILE, h=TILE):
         super().__init__()
         self.rect = pygame.Rect(x, y, w, h)  # Rectángulo de colisión
@@ -203,114 +179,64 @@ class Brick(pygame.sprite.Sprite):
         self.shake = 0  # Frames restantes de animación
         self.oy = y  # Posición Y original
 
-    def hit(self):
-        """
-        Marca el ladrillo como roto y inicia animación de sacudida.
-        Solo si no estaba roto previamente.
-        """
+    def hit(self):# Logica si el ladrillo esta o no roto
+       
         if not self.broken:
             self.broken = True  # Marcar como roto
             self.shake = 8  # Iniciar animación de 8 frames
 
-    def update(self):
-        """
-        Actualiza la animación de ruptura.
-        Si shake > 0, mueve Y alternadamente para efecto de sacudida.
-        Decrementa shake hasta 0, luego restaura Y original.
-        """
+    def update(self):# Efecto de ruptura del ladrillo
+     
         if self.shake > 0:
-            self.rect.y = self.oy - (self.shake % 2) * 4  # Sacudida: alterna -4 y 0
+            self.rect.y = self.oy - (self.shake % 2) * 4  # Sacudida: alterna
             self.shake -= 1  # Reducir contador
         else:
             self.rect.y = self.oy  # Restaurar posición original
 
-    def draw(self, surface):
-        """
-        Dibuja el ladrillo si no está roto.
-        Llama a draw_brick con rect actual.
-        """
+    def draw(self, surface):#    Dibuja el ladrillo si no está roto.
+        
         if not self.broken:
             draw_brick(surface, (self.rect.x, self.rect.y,
                                  self.rect.w, self.rect.h))
 
 
-class GroundTile(pygame.sprite.Sprite):
-    """
-    Representa un tile de suelo o plataforma sólida.
-    No tiene lógica especial, solo colisión y dibujado.
-    Atributos:
-    - rect: Posición y tamaño (usando TILE por defecto).
-    Funcionalidad: draw() dibuja el tile usando draw_ground_tile.
-    """
+class GroundTile(pygame.sprite.Sprite):# Dibujo del suelo
+    
     def __init__(self, x, y, w=TILE, h=TILE):
         super().__init__()
         self.rect = pygame.Rect(x, y, w, h)  # Rectángulo de colisión
 
-    def draw(self, surface):
-        """
-        Dibuja el tile de suelo.
-        Llama a draw_ground_tile con coordenadas del rect.
-        """
+    def draw(self, surface): # Dibuja el suelo con coordenadas del rect.
         draw_ground_tile(surface, (self.rect.x, self.rect.y,
                                    self.rect.w, self.rect.h))
 
 
-class Flag(pygame.sprite.Sprite):
-    """
-    Representa la bandera de victoria al final del nivel.
-    Objetivo del juego: alcanzar para ganar.
-    Atributos:
-    - rect: Poste alto (20x200 px) para colisión.
-    Funcionalidad: draw() dibuja poste y bandera roja.
-    """
+class Flag(pygame.sprite.Sprite):# Bandera de finalizacion del nivel
     def __init__(self, x, y):
         super().__init__()
         self.rect = pygame.Rect(x, y, 20, 200)  # Poste alto para fácil colisión
 
     def draw(self, surface):
-        """
-        Dibuja la bandera: poste gris y bandera roja triangular.
-        """
+       
         # Poste vertical
         pygame.draw.rect(surface, GRAY, (self.rect.x + 8, self.rect.y, 4, self.rect.h))
         # Bandera roja en la cima
         pygame.draw.rect(surface, RED, (self.rect.x, self.rect.y, 20, 40))
 
 
-class Pipe(pygame.sprite.Sprite):
-    """
-    Representa una tubería verde como obstáculo decorativo.
-    Similar a Super Mario Bros, bloquea paso pero no interactúa.
-    Atributos:
-    - rect: Posición y altura variable (ancho fijo TILE).
-    Funcionalidad: draw() dibuja tubería verde con borde.
-    """
+class Pipe(pygame.sprite.Sprite):# Tuberias tipo mario clasico
+  
     def __init__(self, x, y, h=2*TILE):
         super().__init__()
         self.rect = pygame.Rect(x, y, TILE, h)  # Ancho TILE, altura variable
 
     def draw(self, surface):
-        """
-        Dibuja la tubería: rectángulo verde con borde oscuro.
-        """
+        
         pygame.draw.rect(surface, GREEN, self.rect)  # Cuerpo verde
         pygame.draw.rect(surface, DARK_GREEN, self.rect, 2)  # Borde oscuro
 
 
-class Player(pygame.sprite.Sprite):
-    """
-    Representa al personaje jugable (Mario o Luigi).
-    Maneja movimiento, física, colisiones y dibujado.
-    Atributos principales:
-    - character: "mario" o "luigi" para colores y nombre.
-    - rect: Posición y tamaño (32x50 px).
-    - vel_x, vel_y: Velocidades horizontal y vertical.
-    - on_ground: Booleano para estado en suelo.
-    - facing_right: Dirección del sprite.
-    - score: Puntos acumulados.
-    - hat_col, clothes_col, pants_col: Colores personalizados.
-    Funcionalidad: move() procesa input y física; colisiones en _collide_x/y.
-    """
+class Player(pygame.sprite.Sprite):# Dibuja los personajes principales, maneja su lógica de movimiento, salto y colisiones. 
     def __init__(self, character="mario"):
         super().__init__()
         self.character = character  # Tipo de personaje
@@ -342,7 +268,7 @@ class Player(pygame.sprite.Sprite):
 
     def move(self, keys, platforms):
         
-        # Movimiento horizontal: izquierda/derecha o A/D
+        # Movimiento horizontal: izquierda/derecha
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.vel_x = -MOVE_SPEED  # Velocidad negativa para izquierda
             self.facing_right = False  # Cambiar dirección del sprite
@@ -416,12 +342,10 @@ class Player(pygame.sprite.Sprite):
 #  CLASE PRINCIPAL: GAME LOOP PATTERN
 # ─────────────────────────────────────────────
 
-class MarioBrosGame:
+class MarioBrosGame: # Inicializa el juego, configura Pygame y prepara grupos de sprites.
 
     def __init__(self):
-        """
-        Inicializa el juego, configura Pygame y prepara grupos de sprites.
-        """
+        
         try:
             pygame.init()
         except Exception as e:
@@ -467,16 +391,7 @@ class MarioBrosGame:
     # ══════════════════════════════════════════
 
     def process_input(self):
-        """
-        FASE 1 DEL GAME LOOP: Procesar entrada del usuario.
-        Maneja eventos de Pygame (teclas, mouse, cierre ventana).
-        Dependiendo del estado:
-        - SELECT: Cambiar personaje, iniciar juego.
-        - PLAYING: Pausar con P.
-        - PAUSED: Reanudar con P.
-        - GAMEOVER: Reiniciar o salir.
-        Variables: event (de pygame.event.get()), self.state actualizado.
-        """
+      
         for event in pygame.event.get():  # Procesar cola de eventos
             if event.type == pygame.QUIT:  # Cerrar ventana
                 self.running = False  # Salir del loop
@@ -511,17 +426,7 @@ class MarioBrosGame:
     # ══════════════════════════════════════════
 
     def update(self):
-        """
-        FASE 2 DEL GAME LOOP: Actualizar estado del juego.
-        Solo ejecuta si estado es PLAYING o PAUSED (pero en PAUSED no actualiza lógica).
-        Funcionalidad:
-        - Mover jugador con input y física.
-        - Actualizar ladrillos (romper si golpeados).
-        - Recolectar monedas, actualizar puntuación.
-        - Gestionar partículas y popups.
-        - Verificar victoria (alcanzar bandera).
-        Variables: keys (estado teclas), self.player, grupos de sprites actualizados.
-        """
+
         if self.state not in ("PLAYING", "PAUSED"):  # Solo en estados activos
             return
 
@@ -588,16 +493,7 @@ class MarioBrosGame:
     # ══════════════════════════════════════════
 
     def render(self):
-        """
-        FASE 3 DEL GAME LOOP: Dibujar el estado actual en pantalla.
-        Dependiendo del estado, llama a método específico:
-        - SELECT: Pantalla de selección de personaje.
-        - PLAYING: Juego activo con sprites y HUD.
-        - PAUSED: Juego + overlay de pausa.
-        - GAMEOVER: Pantalla de victoria.
-        Finalmente, pygame.display.flip() actualiza pantalla.
-        Variables: self.screen actualizada con dibujos.
-        """
+
         if self.state == "SELECT":
             self._render_select()  # Dibujar selección
         elif self.state == "PLAYING":
@@ -613,7 +509,7 @@ class MarioBrosGame:
     # ─────────────────────────────────────────
     #  Pantalla de selección
     # ─────────────────────────────────────────
-    def _render_select(self):
+    def _render_select(self): # dibuja partes visuales
         draw_background(self.screen)
 
         # Título
@@ -664,7 +560,7 @@ class MarioBrosGame:
                 pygame.draw.rect(self.screen, p["color"],
                                  (int(p["x"]), int(p["y"]), 6, 6))
 
-        # Jugador (ya incluido en all_sprites, pero asegurar)
+        # Jugador
         if screen_rect.colliderect(self.player.rect):
             self.player.draw(self.screen)
 
@@ -727,7 +623,7 @@ class MarioBrosGame:
     #  INICIALIZAR NIVEL
     # ══════════════════════════════════════════
 
-    def _start_game(self, character):
+    def _start_game(self, character):# Se construye el nivel con plataformas, ladrillos, monedas y la bandera, y se inicializa el jugador.
         self.player = Player(character)
         self.all_sprites.empty()
         self.platforms.empty()
@@ -737,7 +633,7 @@ class MarioBrosGame:
         self.particles = []
         self.coin_popups = []
 
-        # ── Suelo continuo (estilo Mario 1-1) ──────────────────────────────
+        # ── Suelo continuo ──────────────────────────────
         for col in range(SCREEN_W // TILE + 1):
             tile = GroundTile(col * TILE, SCREEN_H - TILE)
             self.platforms.add(tile)
